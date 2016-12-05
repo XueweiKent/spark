@@ -83,7 +83,8 @@ private[spark] class TaskSchedulerImpl(
   private val taskSetsByStageIdAndAttempt = new HashMap[Int, HashMap[Int, TaskSetManager]]
 
   // Protected by `this`
-  private[scheduler] val taskIdToTaskSetManager = new HashMap[Long, TaskSetManager]
+  //private[scheduler] val taskIdToTaskSetManager = new HashMap[Long, TaskSetManager]
+  val taskIdToTaskSetManager = new HashMap[Long, TaskSetManager]
   val taskIdToExecutorId = new HashMap[Long, String]
 
   @volatile private var hasReceivedTask = false
@@ -94,17 +95,21 @@ private[spark] class TaskSchedulerImpl(
   val nextTaskId = new AtomicLong(0)
 
   // Number of tasks running on each executor
-  private val executorIdToTaskCount = new HashMap[String, Int]
+  //private val executorIdToTaskCount = new HashMap[String, Int]
+  val executorIdToTaskCount = new HashMap[String, Int]
 
   def runningTasksByExecutors(): Map[String, Int] = executorIdToTaskCount.toMap
 
   // The set of executors we have on each host; this is used to compute hostsAlive, which
   // in turn is used to decide when we can attain data locality on a given host
-  protected val hostToExecutors = new HashMap[String, HashSet[String]]
+  //protected val hostToExecutors = new HashMap[String, HashSet[String]]
+  val hostToExecutors = new HashMap[String, HashSet[String]]
 
-  protected val hostsByRack = new HashMap[String, HashSet[String]]
+  //protected val hostsByRack = new HashMap[String, HashSet[String]]
+  val hostsByRack = new HashMap[String, HashSet[String]]
 
-  protected val executorIdToHost = new HashMap[String, String]
+  //protected val executorIdToHost = new HashMap[String, String]
+  val executorIdToHost = new HashMap[String, String]
 
   // Listener object to pass upcalls into
   var dagScheduler: DAGScheduler = null
