@@ -218,7 +218,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
         new WorkerOffer(id, executorData.executorHost, executorData.freeCores)
       }.toIndexedSeq
       launchTasks(scheduler.resourceOffers(workOffers))
-    }
+    }//zxw
 
     override def onDisconnected(remoteAddress: RpcAddress): Unit = {
       addressToExecutorId
@@ -269,6 +269,8 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
             s"${executorData.executorHost}.")
 
           executorData.executorEndpoint.send(LaunchTask(new SerializableBuffer(serializedTask)))
+          //zxw
+          //task has taskId and executorId. Look for who sets them
         }
       }
     }

@@ -287,6 +287,7 @@ private[spark] class TaskSchedulerImpl(
    * that tasks are balanced across the cluster.
    */
   def resourceOffers(offers: IndexedSeq[WorkerOffer]): Seq[Seq[TaskDescription]] = synchronized {
+    //zxw: this function tells which executor handles which task
     // Mark each slave as alive and remember its hostname
     // Also track if new executor is added
     var newExecAvail = false
@@ -337,6 +338,7 @@ private[spark] class TaskSchedulerImpl(
         taskSet.abortIfCompletelyBlacklisted(hostToExecutors)
       }
     }
+    //zxw: assigning tasks based on locality
 
     if (tasks.size > 0) {
       hasLaunchedTask = true
