@@ -317,7 +317,7 @@ class DAGScheduler(
    * regenerating data.
    */
   def createShuffleMapStage(shuffleDep: ShuffleDependency[_, _, _], jobId: Int): ShuffleMapStage = {
-    val rdd = shuffleDep.rdd.coalesce(shuffleDep.rdd.partitions.length-1)
+    val rdd = shuffleDep.rdd//.coalesce(shuffleDep.rdd.partitions.length-1)
     val numTasks = rdd.partitions.length
     //rdd.coalesce(5)
     logInfo("*************************498 first try*****************************")
