@@ -371,7 +371,8 @@ class TaskSchedulerImpl(
         taskIdToTaskSetManager.get(tid) match {
           case Some(taskSet) =>
             if (TaskState.isFinished(state)) {
-              taskIdToTaskSetManager.remove(tid)
+              //private
+              //taskIdToTaskSetManager.remove(tid)
               taskIdToExecutorId.remove(tid).foreach { execId =>
                 if (executorIdToTaskCount.contains(execId)) {
                   executorIdToTaskCount(execId) -= 1
