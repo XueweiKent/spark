@@ -418,8 +418,8 @@ abstract class RDD[T: ClassTag](
   def repartitionWithWeight(numPartitions: Int, loc_weight: HashMap[String, Int])(implicit ord: Ordering[T] = null): RDD[T] = withScope {
     var sumWeight = loc_weight.values.sum
     logInfo("sumWeight is ********************"+sumWeight)
-    coalesceWithWeight(sumWeight, loc_weight, shuffle = true)
-    //coalesce(numPartitions)
+    var rddPieces = coalesceWithWeight(sumWeight, loc_weight, shuffle = true)
+    rddPieces.coalesce(numPartitions)
   }
 
   /**
