@@ -35,7 +35,8 @@ import org.apache.spark.util.Utils
  * @param parentsIndices list of indices in the parent that have been coalesced into this partition
  * @param preferredLocation the preferred location for this partition
  */
-private[spark] case class CoalescedRDDPartition(
+//private[spark] case class CoalescedRDDPartition(
+case class CoalescedRDDPartition(
     index: Int,
     @transient rdd: RDD[_],
     parentsIndices: Array[Int],
@@ -73,7 +74,8 @@ private[spark] case class CoalescedRDDPartition(
  * @param maxPartitions number of desired partitions in the coalesced RDD (must be positive)
  * @param partitionCoalescer [[PartitionCoalescer]] implementation to use for coalescing
  */
-private[spark] class CoalescedRDD[T: ClassTag](
+//private[spark] class CoalescedRDD[T: ClassTag](
+class CoalescedRDD[T: ClassTag](
     @transient var prev: RDD[T],
     maxPartitions: Int,
     partitionCoalescer: Option[PartitionCoalescer] = None,
@@ -166,7 +168,8 @@ private[spark] class CoalescedRDD[T: ClassTag](
  * (contact alig for questions)
  */
 
-private class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
+//private class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
+class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
   extends PartitionCoalescer {
   def compare(o1: PartitionGroup, o2: PartitionGroup): Boolean = o1.numPartitions < o2.numPartitions
   def compare(o1: Option[PartitionGroup], o2: Option[PartitionGroup]): Boolean =
