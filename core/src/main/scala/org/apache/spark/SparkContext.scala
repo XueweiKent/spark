@@ -365,9 +365,10 @@ class SparkContext(config: SparkConf) extends Logging {
 
   def getNodeDuration(): HashMap[String, Long] = {
     var tsi=_taskScheduler.asInstanceOf[TaskSchedulerImpl]
-    var maxTaskId=tsi.taskIdToTaskSetManager.keys.max
-    var taskInfos=tsi.taskIdToTaskSetManager(maxTaskId).taskInfos
-    var weightMap=HashMap[String,Long]()
+    var taskIdToTaskSetManager = tsi.getTaskIdToTaskSetManager
+    var maxTaskId=taskIdToTaskSetManager.keys.max
+    var taskInfos=taskIdToTaskSetManager(maxTaskId).taskInfos
+    var weightMap=HashMap[String, Long]()
     for(tid <- taskInfos.keys){
       var host = taskInfos(tid).host
       var duration = taskInfos(tid).duration
