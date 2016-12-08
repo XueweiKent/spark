@@ -223,9 +223,8 @@ abstract class RDD[T: ClassTag](
   @transient private var partitions_ : Array[Partition] = null
 
   /** An Option holding our checkpoint RDD, if we are checkpointed */
-  //private def checkpointRDD: Option[CheckpointRDD[T]] = checkpointData.flatMap(_.checkpointRDD)
-  def checkpointRDD: Option[CheckpointRDD[T]] = checkpointData.flatMap(_.checkpointRDD)
-
+  private def checkpointRDD: Option[CheckpointRDD[T]] = checkpointData.flatMap(_.checkpointRDD)
+  
   /**
    * Get the list of dependencies of this RDD, taking into account whether the
    * RDD is checkpointed or not.
