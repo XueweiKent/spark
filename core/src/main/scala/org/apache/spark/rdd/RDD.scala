@@ -419,7 +419,7 @@ abstract class RDD[T: ClassTag](
     var sumWeight = loc_weight.values.sum
     logInfo("sumWeight is ********************"+sumWeight)
     var rddPieces = coalesceWithWeight(sumWeight, loc_weight, shuffle = true)
-    rddPieces.coalesce(numPartitions)
+    new LocallyCoalescedRDD(rddPieces, numPartitions, Option.empty)
   }
 
   /**

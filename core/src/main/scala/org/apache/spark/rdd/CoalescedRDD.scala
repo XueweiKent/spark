@@ -167,7 +167,7 @@ private[spark] class CoalescedRDD[T: ClassTag](
  */
 
 private class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
-  extends PartitionCoalescer {
+  extends PartitionCoalescer with Serializable{
   def compare(o1: PartitionGroup, o2: PartitionGroup): Boolean = o1.numPartitions < o2.numPartitions
   def compare(o1: Option[PartitionGroup], o2: Option[PartitionGroup]): Boolean =
     if (o1 == None) false else if (o2 == None) true else compare(o1.get, o2.get)
@@ -475,5 +475,62 @@ private class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
     throwBalls(maxPartitions, prev, balanceSlack, partitionLocs)
     println("partitionLocs"+partitionLocs)
     getPartitions
+  }
+}
+
+
+private[spark] class LocallyCoalescedRDD[T: ClassTag](
+    @transient var prev: RDD[T],
+    maxPartitions: Int,
+    partitionCoalescer: Option[PartitionCoalescer] = None,
+    loc_weight: HashMap[String, Int] = null)
+  extends RDD[T](prev.context, Nil) {  // Nil since we implement getDependencies
+
+  require(maxPartitions > 0 || maxPartitions == prev.partitions.length,
+    s"Number of partitions ($maxPartitions) must be positive.")
+  if (partitionCoalescer.isDefined) {
+    require(partitionCoalescer.get.isInstanceOf[Serializable],
+      "The partition coalescer passed in must be serializable.")
+  }
+
+  override def getPartitions: Array[Partition] = {
+    val pc = new DefaultPartitionCoalescer(1.0)
+
+    if(loc_weight==null){
+      pc.coalesce(maxPartitions, prev).zipWithIndex.map {
+        case (pg, i) =>
+          val ids = pg.partitions.map(_.index).toArray
+          new CoalescedRDDPartition(i, prev, ids, pg.prefLoc)
+      }
+    }
+    else{
+      pc.coalesceWithWeight(maxPartitions, prev, loc_weight).zipWithIndex.map {
+       case (pg, i) =>
+          val ids = pg.partitions.map(_.index).toArray
+          new CoalescedRDDPartition(i, prev, ids, pg.prefLoc)
+      }
+    }
+  }
+
+  override def compute(partition: Partition, context: TaskContext): Iterator[T] = {
+    partition.asInstanceOf[CoalescedRDDPartition].parents.iterator.flatMap { parentPartition =>
+      firstParent[T].iterator(parentPartition, context)
+    }
+  }
+
+  override def getDependencies: Seq[Dependency[_]] = {
+    Seq(new NarrowDependency(prev) {
+      def getParents(id: Int): Seq[Int] =
+        partitions(id).asInstanceOf[CoalescedRDDPartition].parentsIndices
+    })
+  }
+
+  override def clearDependencies() {
+    super.clearDependencies()
+    prev = null
+  }
+
+  override def getPreferredLocations(partition: Partition): Seq[String] = {
+    partition.asInstanceOf[CoalescedRDDPartition].preferredLocation.toSeq
   }
 }
