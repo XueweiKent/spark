@@ -134,7 +134,11 @@ abstract class RDD[T: ClassTag](
   /**
    * Optionally overridden by subclasses to specify placement preferences.
    */
-  protected def getPreferredLocations(split: Partition): Seq[String] = Nil
+  //protected def getPreferredLocations(split: Partition): Seq[String] = Nil
+  def getPreferredLocations(split: Partition): Seq[String] = {
+    logInfo("*************** RDD.getPreferredLocations got called. Shouldn't! *****************")
+    Nil
+  }
 
   /** Optionally overridden by subclasses to specify how they are partitioned. */
   @transient val partitioner: Option[Partitioner] = None
@@ -267,6 +271,13 @@ abstract class RDD[T: ClassTag](
    * RDD is checkpointed.
    */
   final def preferredLocations(split: Partition): Seq[String] = {
+    logInfo( "*********************** 498 RDD.preferredLocations **********************" )
+    if(split.isInstanceOf[CoalescedRDDPartition]){
+      var crp = split.asInstanceOf[CoalescedRDDPartition]
+      if(crp.preferredLocation != None){
+        crp.preferredLocation
+      }
+    }
     checkpointRDD.map(_.getPreferredLocations(split)).getOrElse {
       getPreferredLocations(split)
     }

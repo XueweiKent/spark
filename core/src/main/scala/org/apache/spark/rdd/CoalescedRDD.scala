@@ -266,15 +266,18 @@ class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
           }
         )
       }
-      prev.partitions.foreach(p => {
-          val locs = currPrefLocs(p, prev)
-          if (locs.nonEmpty) {
-            tmpPartsWithLocs.put(p, locs)
-          } else {
-            partsWithoutLocs += p
+      else{
+        prev.partitions.foreach(p => {
+            val locs = currPrefLocs(p, prev)
+            if (locs.nonEmpty) {
+              tmpPartsWithLocs.put(p, locs)
+            } else {
+              partsWithoutLocs += p
+            }
           }
-        }
-      )
+        )
+      }
+
       // convert it into an array of host to partition
       for (x <- 0 to 2) {
         tmpPartsWithLocs.foreach { parts =>

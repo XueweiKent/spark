@@ -82,7 +82,8 @@ private[spark] class ReliableCheckpointRDD[T: ClassTag](
   /**
    * Return the locations of the checkpoint file associated with the given partition.
    */
-  protected override def getPreferredLocations(split: Partition): Seq[String] = {
+  //protected override def getPreferredLocations(split: Partition): Seq[String] = {
+  override def getPreferredLocations(split: Partition): Seq[String] = {
     val status = fs.getFileStatus(
       new Path(checkpointPath, ReliableCheckpointRDD.checkpointFileName(split.index)))
     val locations = fs.getFileBlockLocations(status, 0, status.getLen)
