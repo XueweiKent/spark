@@ -268,11 +268,27 @@ class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
       }
       else{
         prev.partitions.foreach(p => {
-            val locs = currPrefLocs(p, prev)
-            if (locs.nonEmpty) {
-              tmpPartsWithLocs.put(p, locs)
-            } else {
-              partsWithoutLocs += p
+            println("getAllPrefLocs() dealing with a partition")
+            if(p.isInstanceOf[CoalescedRDDPartition]){
+              println("getAllPrefLocs() dealing with a CoalescedRDDPartition")
+              var pp = p.asInstanceOf[CoalescedRDDPartition]
+              if(pp.preferredLocation != None ){
+                println("getAllPrefLocs() dealing with a CoalescedRDDPartition with preferredLocation")
+                tmpPartsWithLocs.put(p, pp.preferredLocation.toSeq)
+              } else {
+                println("getAllPrefLocs() dealing with a CoalescedRDDPartition with non-preferredLocation")
+                partsWithoutLocs += p
+              }
+              
+            }
+            else{
+              println("getAllPrefLocs() dealing with a non-CoalescedRDDPartition")
+              val locs = currPrefLocs(p, prev)
+              if (locs.nonEmpty) {
+                tmpPartsWithLocs.put(p, locs)
+              } else {
+                partsWithoutLocs += p
+              }
             }
           }
         )

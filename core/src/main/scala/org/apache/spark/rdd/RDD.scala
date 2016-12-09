@@ -272,12 +272,12 @@ abstract class RDD[T: ClassTag](
    */
   final def preferredLocations(split: Partition): Seq[String] = {
     logInfo( "*********************** 498 RDD.preferredLocations **********************" )
-    if(split.isInstanceOf[CoalescedRDDPartition]){
+    /*if(split.isInstanceOf[CoalescedRDDPartition]){
       var crp = split.asInstanceOf[CoalescedRDDPartition]
       if(crp.preferredLocation != None){
         crp.preferredLocation
       }
-    }
+    }*/
     checkpointRDD.map(_.getPreferredLocations(split)).getOrElse {
       getPreferredLocations(split)
     }
