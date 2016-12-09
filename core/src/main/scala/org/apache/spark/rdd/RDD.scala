@@ -137,7 +137,21 @@ abstract class RDD[T: ClassTag](
   //protected def getPreferredLocations(split: Partition): Seq[String] = Nil
   def getPreferredLocations(split: Partition): Seq[String] = {
     logInfo("*************** RDD.getPreferredLocations got called. Shouldn't! *****************")
-    Nil
+    if(split.isInstanceOf[CoalescedRDDPartition]){
+      logInfo( "*********************** 498 RDD.getPreferredLocations found CoalescedRDDPartition **********************" )
+      var crp = split.asInstanceOf[CoalescedRDDPartition]
+      if(crp.preferredLocation != None){
+        logInfo( "*********************** 498 RDD.getPreferredLocations found CoalescedRDDPartition's prefLoc **********************" )
+        crp.preferredLocation.toSeq
+      } else {
+        logInfo( "*********************** 498 RDD.getPreferredLocations found CoalescedRDDPartition's non-prefLoc **********************" )
+        Nil
+      }
+    }
+    else{
+      logInfo( "*********************** 498 RDD.getPreferredLocations found non-CoalescedRDDPartition **********************" )
+      Nil
+    }
   }
 
   /** Optionally overridden by subclasses to specify how they are partitioned. */
@@ -272,14 +286,25 @@ abstract class RDD[T: ClassTag](
    */
   final def preferredLocations(split: Partition): Seq[String] = {
     logInfo( "*********************** 498 RDD.preferredLocations **********************" )
-    /*if(split.isInstanceOf[CoalescedRDDPartition]){
+    var ret = Seq[String]()
+    if(split.isInstanceOf[CoalescedRDDPartition]){
+      logInfo( "*********************** 498 RDD.preferredLocations found CoalescedRDDPartition **********************" )
       var crp = split.asInstanceOf[CoalescedRDDPartition]
       if(crp.preferredLocation != None){
-        crp.preferredLocation
+        logInfo( "*********************** 498 RDD.preferredLocations found CoalescedRDDPartition's prefLoc **********************" )
+        crp.preferredLocation.toSeq
+      } else {
+        logInfo( "*********************** 498 RDD.preferredLocations found CoalescedRDDPartition's non-prefLoc **********************" )
+        checkpointRDD.map(_.getPreferredLocations(split)).getOrElse {
+         getPreferredLocations(split)
+        }
       }
-    }*/
-    checkpointRDD.map(_.getPreferredLocations(split)).getOrElse {
-      getPreferredLocations(split)
+    }
+    else {
+      logInfo( "*********************** 498 RDD.preferredLocations found non-CoalescedRDDPartition **********************" )
+      checkpointRDD.map(_.getPreferredLocations(split)).getOrElse {
+       getPreferredLocations(split)
+      }
     }
   }
 
