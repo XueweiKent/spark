@@ -169,8 +169,8 @@ class CoalescedRDD[T: ClassTag](
  */
 
 //private class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
-class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
-  extends PartitionCoalescer {
+class DefaultPartitionCoalescer(val balanceSlack: Double = 0.9999)
+  extends PartitionCoalescer with Serializable {
   def compare(o1: PartitionGroup, o2: PartitionGroup): Boolean = o1.numPartitions < o2.numPartitions
   def compare(o1: Option[PartitionGroup], o2: Option[PartitionGroup]): Boolean =
     if (o1 == None) false else if (o2 == None) true else compare(o1.get, o2.get)
@@ -324,6 +324,48 @@ class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
     } else { false }
   }
 
+  def setupGroups(targetLen: Int, partitionLocs: PartitionLocations) {
+    // deal with empty case, just create targetLen partition groups with no preferred location
+    if (partitionLocs.partsWithLocs.isEmpty) {
+      println("///////////////// setupGroups see partitionLocs.partsWithLocs.isEmpty  //////////")
+      (1 to targetLen).foreach(x => groupArr += new PartitionGroup())
+      return
+    }
+
+    noLocality = false
+    // number of iterations needed to be certain that we've seen most preferred locations
+    var numCreated = 0
+    var tries = 0
+
+    // rotate through until either targetLen unique/distinct preferred locations have been created
+    // OR (we have went through either all partitions OR we've rotated expectedCoupons2 - in
+    // which case we have likely seen all preferred locations)
+    val numPartsToLookAt = partitionLocs.partsWithLocs.length
+    while (numCreated < targetLen && tries < numPartsToLookAt) {
+      val (nxt_replica, nxt_part) = partitionLocs.partsWithLocs(tries)
+      tries += 1
+      if (!groupHash.contains(nxt_replica)) {
+        val pgroup = new PartitionGroup(Some(nxt_replica))
+        groupArr += pgroup
+        addPartToPGroup(nxt_part, pgroup)
+        groupHash.put(nxt_replica, ArrayBuffer(pgroup)) // list in case we have multiple
+        numCreated += 1
+      }
+    }
+    tries = 0
+    // if we don't have enough partition groups, create duplicates
+    while (numCreated < targetLen) {
+      var (nxt_replica, nxt_part) = partitionLocs.partsWithLocs(tries)
+      tries += 1
+      val pgroup = new PartitionGroup(Some(nxt_replica))
+      groupArr += pgroup
+      groupHash.getOrElseUpdate(nxt_replica, ArrayBuffer()) += pgroup
+      addPartToPGroup(nxt_part, pgroup)
+      numCreated += 1
+      if (tries >= partitionLocs.partsWithLocs.length) tries = 0
+    }
+  }
+
   /**
    * Initializes targetLen partition groups. If there are preferred locations, each group
    * is assigned a preferredLocation. This uses coupon collector to estimate how many
@@ -331,9 +373,10 @@ class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
    * locations (2 * n log(n))
    * @param targetLen
    */
-  def setupGroups(targetLen: Int, partitionLocs: PartitionLocations) {
+  /*def setupGroups(targetLen: Int, partitionLocs: PartitionLocations) {
     // deal with empty case, just create targetLen partition groups with no preferred location
     if (partitionLocs.partsWithLocs.isEmpty) {
+      println("///////////////// setupGroups see partitionLocs.partsWithLocs.isEmpty  //////////")
       (1 to targetLen).foreach(x => groupArr += new PartitionGroup())
       return
     }
@@ -371,7 +414,7 @@ class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
       numCreated += 1
       if (tries >= partitionLocs.partsWithLocs.length) tries = 0
     }
-  }
+  }*/
 
   /**
    * Takes a parent RDD partition and decides which of the partition groups to put it in
@@ -443,6 +486,7 @@ class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
       // with the partitions with preferred locations
       val partIter = partitionLocs.partsWithLocs.iterator
       groupArr.filter(pg => pg.numPartitions == 0).foreach { pg =>
+        println("/////////////////// throwBalls see empty PartitionGroup ////////////////")
         while (partIter.hasNext && pg.numPartitions == 0) {
           var (nxt_replica, nxt_part) = partIter.next()
           if (!initialHash.contains(nxt_part)) {
@@ -456,6 +500,7 @@ class DefaultPartitionCoalescer(val balanceSlack: Double = 0.10)
       // use partitions without preferred locations
       val partNoLocIter = partitionLocs.partsWithoutLocs.iterator
       groupArr.filter(pg => pg.numPartitions == 0).foreach { pg =>
+        println("/////////////////// throwBalls see empty PartitionGroup ////////////////")
         while (partNoLocIter.hasNext && pg.numPartitions == 0) {
           var nxt_part = partNoLocIter.next()
           if (!initialHash.contains(nxt_part)) {
